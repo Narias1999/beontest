@@ -11,16 +11,22 @@ const backendClient = new BackendClient();
 
 export const DashboardPage: FC<RouteComponentProps> = () => {
   const [users, setUsers] = useState<IUserProps[]>([]);
-  const loading = true;
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState<number[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const result = await backendClient.getAllUsers();
-      setUsers(result.data);
-    };
+    fetchData(currentPage);
+  }, []);
 
-    fetchData();
-  });
+  const fetchData = async (page: number) => {
+    setLoading(true);
+    const result = await backendClient.getAllUsers(page);
+    setTotalPages(new Array(result.pagination.totalPages));
+    setCurrrentPage(result.pagination.page);
+    setUsers(result.data);
+    setLoading(false);
+  };
 
   return (
     <div style={{ paddingTop: "30px" }}>
@@ -43,6 +49,16 @@ export const DashboardPage: FC<RouteComponentProps> = () => {
                   return <UserCard key={user.id} {...user} />;
                 })
               : null}
+              <div>
+                <button
+                  disabled={currentPage <= 1}
+                  onClick={() => fetchData(currentPage - 1)}
+                >back</button>
+                <button
+                  disabled={currentPage >= totalPages.length}
+                  onClick={() => fetchData(currentPage + 1)}
+                >next</button>
+              </div>
           </div>
         )}
       </div>
